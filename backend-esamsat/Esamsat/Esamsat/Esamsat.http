@@ -1,0 +1,6 @@
+@Esamsat_HostAddress = http://localhost:5056
+
+GET {{Esamsat_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

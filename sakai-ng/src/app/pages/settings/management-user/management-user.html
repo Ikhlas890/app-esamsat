@@ -1,0 +1,69 @@
+<h4>Manajemen User</h4>
+<p-card class="mb-4">
+    <div class="flex justify-content-between align-items-center mb-3">
+        <!-- <h2 class="m-0">Manajemen User</h2> -->
+        <!-- <p-button label="Tambah User" icon="pi pi-plus" (click)="openNewUser()" class="p-button-sm"></p-button> -->
+    </div>
+
+    <!-- Filter -->
+    <div class="flex gap-3 mb-3">
+        <span class="p-input-icon-left w-full md:w-30rem">
+            <i class="pi pi-search mb-2"></i>
+            <input #searchBox pInputText type="text" placeholder="Cari Nama atau Email..." (input)="dt.filterGlobal(searchBox.value, 'contains')" class="w-full" />
+        </span>
+    </div>
+
+    <p-table #dt [value]="users" [loading]="loading" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,20]" responsiveLayout="scroll" class="p-datatable-gridlines p-datatable-sm" [globalFilterFields]="['nama','email']">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>UserID</th>
+                <th>Nama</th>
+                <th>Email</th>
+                <th>Group</th>
+                <th>Tanggal Dibuat</th>
+                <th style="width: 120px; text-align: center">Aksi</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-user>
+            <tr>
+                <td>{{ user.userid }}</td>
+                <td>{{ user.nama }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.kdgroup }}</td>
+                <td>{{ user.createdate | date:'dd/MM/yyyy' }}</td>
+                <td class="text-center">
+                    <p-button icon="pi pi-user-edit" styleClass="p-button-text p-button-sm mr-2" (click)="openEditDialog(user)"> </p-button>
+                    <p-button icon="pi pi-trash" styleClass="p-button-text p-button-sm p-button-danger" (click)="confirmDelete(user)"> </p-button>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</p-card>
+
+<!-- Dialog Edit -->
+<p-dialog header="Edit User" [(visible)]="editDialogVisible" [modal]="true" [style]="{width: '400px'}">
+    <div class="p-fluid flex flex-col gap-4">
+        <div class="flex flex-col gap-2">
+            <label for="nama">Nama</label>
+            <input id="nama" type="text" pInputText [(ngModel)]="selectedUser.nama" />
+        </div>
+        <div class="flex flex-col gap-2">
+            <label for="email">Email</label>
+            <input id="email" type="email" pInputText [(ngModel)]="selectedUser.email" />
+        </div>
+        <div class="flex flex-col gap-2">
+            <label for="kdgroup">Group</label>
+            <p-select id="kdgroup" [options]="dropdownItems" [(ngModel)]="selectedUser.kdgroup" optionLabel="label" optionValue="value" placeholder="Pilih Group" class="w-full"></p-select>
+        </div>
+        <div class="flex flex-col gap-2">
+            <label for="password">Password</label>
+            <input id="password" type="password" pInputText [(ngModel)]="selectedUser.password" />
+        </div>
+        <div class="flex justify-content-end mt-3">
+            <p-button label="Simpan" icon="pi pi-check" (click)="saveUser()" class="p-button-success"></p-button>
+        </div>
+    </div>
+</p-dialog>
+
+<p-confirmDialog></p-confirmDialog>
+<p-toast></p-toast>

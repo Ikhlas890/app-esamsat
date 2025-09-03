@@ -1,0 +1,60 @@
+<h4>Kelompok User</h4>
+<p-card class="mb-4">
+
+    <!-- Header -->
+    <div class="flex justify-content-between align-items-center mb-3">
+        <p-button label="Tambah Kelompok" icon="pi pi-plus" styleClass="ml-3" (click)="openNew()"></p-button>
+    </div>
+
+    <!-- Tabel -->
+    <p-table [value]="groupList" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5,10,20]" [stripedRows]="true" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+            <tr>
+                <th style="width: 20%">Kode Grup</th>
+                <th style="width: 25%">Nama Grup</th>
+                <th style="width: 35%">Keterangan</th>
+                <th style="width: 20%; text-align: center">Aksi</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-group>
+            <tr>
+                <td>{{ group.kdgroup }}</td>
+                <td>{{ group.nmgroup }}</td>
+                <td>{{ group.ket }}</td>
+                <td class="text-center">
+                    <p-button icon="pi pi-pencil" styleClass="p-button-text p-button-sm mr-2" (click)="editGroup(group)"></p-button>
+                    <p-button icon="pi pi-trash" styleClass="p-button-text p-button-sm p-button-danger" (click)="deleteGroup(group)"></p-button>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</p-card>
+
+    <!-- Dialog Form -->
+    <p-dialog header="{{ isEdit ? 'Edit Kelompok' : 'Tambah Kelompok' }}" [(visible)]="groupDialog" [modal]="true" [style]="{width: '400px'}" [closable]="false">
+        <div class="p-fluid flex flex-col gap-4">
+            <!-- Kode Grup hanya tampil saat Tambah -->
+            <div class="flex flex-col gap-2" *ngIf="!isEdit">
+                <label for="kdgroup">Kode Grup</label>
+                <input id="kdgroup" type="text" pInputText [(ngModel)]="currentGroup.kdgroup" required autofocus />
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="nmgroup">Nama Grup</label>
+                <input id="nmgroup" type="text" pInputText [(ngModel)]="currentGroup.nmgroup" required />
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="ket">Keterangan</label>
+                <textarea id="ket" pTextarea [(ngModel)]="currentGroup.ket" rows="4"></textarea>
+            </div>
+        </div>
+
+        <ng-template pTemplate="footer">
+            <p-button label="Batal" icon="pi pi-times" styleClass="p-button-text" (click)="hideDialog()"></p-button>
+            <p-button label="Simpan" icon="pi pi-check" (click)="saveGroup()" [disabled]="!isFormValid()"></p-button>
+        </ng-template>
+    </p-dialog>
+
+    <p-toast></p-toast>
+    <p-confirmDialog></p-confirmDialog>

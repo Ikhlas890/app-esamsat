@@ -1,0 +1,24 @@
+<h4>Register User</h4>
+<div class="card flex flex-col gap-4">
+    <div class="flex flex-col gap-2">
+        <label for="userid">Username</label>
+        <input pInputText id="userid" type="text" [(ngModel)]="userid" />
+    </div>
+    <div class="flex flex-col gap-2">
+        <label for="nama">Nama</label>
+        <input pInputText id="nama" type="text" [(ngModel)]="nama" />
+    </div>
+    <div class="flex flex-col gap-2">
+        <label for="email">Email</label>
+        <input pInputText id="email" type="text" [(ngModel)]="email" />
+    </div>
+    <div class="flex flex-col gap-2">
+        <label for="password">Password</label>
+        <input pInputText id="password" type="password" [(ngModel)]="password" />
+    </div>
+    <div class="flex flex-col gap-2">
+        <label for="kdgroup">Kode Group</label>
+        <p-select id="kdgroup" [(ngModel)]="kdgroup" [options]="dropdownItems" optionLabel="label" optionValue="value" placeholder="Select One" class="w-full"> </p-select>
+    </div>
+    <p-button type="button" label="Register" (click)="register()" [loading]="loading"></p-button>
+</div>
