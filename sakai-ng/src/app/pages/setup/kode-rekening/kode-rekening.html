@@ -1,0 +1,234 @@
+<div class="md:w-3/4 mx-auto">
+    <div class="card">
+        <div class="font-semibold text-xl mb-4">Pendapatan & Neraca</div>
+
+        <p-tabs [value]="activeTab" (valueChange)="onTabChange(+$event)">
+            <p-tablist>
+                <p-tab [value]="0">Pendapatan</p-tab>
+                <p-tab [value]="1">Neraca</p-tab>
+            </p-tablist>
+
+            <p-tabpanels>
+                <!-- TAB 1: Pendapatan -->
+                <p-tabpanel [value]="0">
+                    <div class="mb-3">
+                        <p-button label="Tambah Pendapatan" icon="pi pi-plus" (click)="openNewPendapatan()"></p-button>
+                    </div>
+
+                    <!-- Filter/Search -->
+                    <div class="flex gap-3 mb-3">
+                        <span class="p-input-icon-left w-full md:w-30rem">
+                            <p-iconField>
+                                <input #pendapatanSearch pInputText type="text" placeholder="Search" (input)="pendapatanTable.filterGlobal(pendapatanSearch.value, 'contains')" class="w-full" />
+                                <p-inputicon class="pi pi-search" />
+                            </p-iconField>
+                        </span>
+                    </div>
+
+                    <p-table
+                        #pendapatanTable
+                        [value]="masterrekdList"
+                        [loading]="loadingPendapatan"
+                        [paginator]="true"
+                        [rows]="10"
+                        [rowsPerPageOptions]="[5,10,20]"
+                        [globalFilterFields]="['kdrek','nmrek','kdjnspjk','status']"
+                        [sortField]="'kdrek'"
+                        [sortOrder]="1"
+                        responsiveLayout="scroll"
+                        class="p-datatable-gridlines p-datatable-sm"
+                    >
+                        <ng-template pTemplate="header">
+                            <tr>
+                                <th pSortableColumn="kdrek">Kode Rek <p-sortIcon field="kdrek"></p-sortIcon></th>
+                                <th pSortableColumn="nmrek">Uraian <p-sortIcon field="nmrek"></p-sortIcon></th>
+                                <th pSortableColumn="type">Type <p-sortIcon field="type"></p-sortIcon></th>
+                                <th pSortableColumn="status">Status <p-sortIcon field="status"></p-sortIcon></th>
+                                <th>Aksi</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template pTemplate="body" let-item>
+                            <tr>
+                                <td>{{ item.kdrek }}</td>
+                                <td>{{ item.nmrek }}</td>
+                                <td>{{ item.type }}</td>
+                                <td>{{ getStatusLabel(item.status) }}</td>
+                                <td>
+                                    <p-button icon="pi pi-pencil" styleClass="p-button-text p-button-sm mr-2" (click)="editPendapatan(item)"></p-button>
+                                    <p-button icon="pi pi-trash" styleClass="p-button-text p-button-sm p-button-danger" (click)="confirmDeletePendapatan(item)"> </p-button>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </p-tabpanel>
+
+                <!-- TAB 2: Neraca -->
+                <p-tabpanel [value]="1">
+                    <div class="mb-3">
+                        <p-button label="Tambah Neraca" icon="pi pi-plus" (click)="openNewNeraca()"></p-button>
+                    </div>
+
+                    <!-- Filter/Search -->
+                    <div class="flex gap-3 mb-3">
+                        <span class="p-input-icon-left w-full md:w-30rem">
+                            <p-iconField>
+                                <input #neracaSearch pInputText type="text" placeholder="Search" (input)="neracaTable.filterGlobal(neracaSearch.value, 'contains')" class="w-full" />
+                                <p-inputicon class="pi pi-search" />
+                            </p-iconField>
+                        </span>
+                    </div>
+
+                    <p-table
+                        #neracaTable
+                        [value]="masterreknrcList"
+                        [loading]="loadingNeraca"
+                        [paginator]="true"
+                        [rows]="10"
+                        [rowsPerPageOptions]="[5,10,20]"
+                        [globalFilterFields]="['kdrek','nmrek','type']"
+                        [sortField]="'kdrek'"
+                        [sortOrder]="1"
+                        responsiveLayout="scroll"
+                        class="p-datatable-gridlines p-datatable-sm"
+                    >
+                        <ng-template pTemplate="header">
+                            <tr>
+                                <th pSortableColumn="kdrek">Kode Rek <p-sortIcon field="kdrek"></p-sortIcon></th>
+                                <th pSortableColumn="nmrek">Uraian <p-sortIcon field="nmrek"></p-sortIcon></th>
+                                <th pSortableColumn="type">Type <p-sortIcon field="type"></p-sortIcon></th>
+                                <th>Aksi</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template pTemplate="body" let-item>
+                            <tr>
+                                <td>{{ item.kdrek }}</td>
+                                <td>{{ item.nmrek }}</td>
+                                <td>{{ item.type }}</td>
+                                <td>
+                                    <p-button icon="pi pi-pencil" styleClass="p-button-text p-button-sm mr-2" (click)="editNeraca(item)"></p-button>
+                                    <p-button icon="pi pi-trash" styleClass="p-button-text p-button-sm p-button-danger" (click)="confirmDeleteNeraca(item)"></p-button>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </p-tabpanel>
+            </p-tabpanels>
+        </p-tabs>
+    </div>
+</div>
+
+<!-- Dialog Pendapatan -->
+<p-dialog [(visible)]="masterrekdDialog" [modal]="true" [style]="{width: '800px'}" header="{{ masterrekdEdit ? 'Edit' : 'Tambah' }} Pendapatan">
+    <div class="p-fluid flex flex-col gap-4">
+        <!-- ID Rekening (Readonly saat edit) -->
+        <div class="flex flex-col gap-2" *ngIf="masterrekdEdit">
+            <label for="idrekd">ID Rekening</label>
+            <input id="idrekd" type="text" pInputText [(ngModel)]="selectedMasterrekd.idrekd" readonly />
+        </div>
+
+        <div class="flex flex-wrap gap-6">
+            <!-- Level -->
+            <div class="flex flex-col grow basis-0 gap-2">
+                <label for="mtglevel">Level</label>
+                <p-select [(ngModel)]="selectedMasterrekd.mtglevel" [options]="masterjnsstrurekOptions" optionLabel="label" optionValue="value" placeholder="Pilih Kode level"> </p-select>
+            </div>
+            <!-- Rekening Induk -->
+            <div class="flex flex-col grow basis-0 gap-2">
+                <label for="idparent">Parent</label>
+                <p-select [(ngModel)]="selectedMasterrekd.idparent" [options]="parentOptions" optionLabel="label" optionValue="value" placeholder="Pilih rekening induk (jika ada)"> </p-select>
+            </div>
+        </div>
+
+        <!-- Kode Rekening -->
+        <div class="flex flex-col gap-2">
+            <label for="kdrek">Kode Rekening</label>
+            <input id="kdrek" type="text" pInputText [(ngModel)]="selectedMasterrekd.kdrek" required />
+        </div>
+
+        <!-- Nama Rekening -->
+        <div class="flex flex-col gap-2">
+            <label for="nmrek">Nama Rekening</label>
+            <input id="nmrek" type="text" pInputText [(ngModel)]="selectedMasterrekd.nmrek" required />
+        </div>
+
+        <!-- Jenis Pajak -->
+        <div class="flex flex-col gap-2">
+            <label for="kdjnspjk">Jenis Pajak</label>
+            <p-select [(ngModel)]="selectedMasterrekd.kdjnspjk" [options]="jnspajakOptions" optionLabel="label" optionValue="value" placeholder="Pilih jenis pajak"> </p-select>
+        </div>
+
+        <!-- Tipe Rekening -->
+        <div class="flex flex-col gap-2">
+            <label>Tipe Rekening</label>
+            <div class="flex gap-4">
+                <div class="flex items-center">
+                    <p-radioButton name="type" value="H" [(ngModel)]="selectedMasterrekd.type" inputId="typeH" label="Header" />
+                    <label class="leading-none ml-2">H (Header)</label>
+                </div>
+                <div class="flex items-center">
+                    <p-radioButton name="type" value="D" [(ngModel)]="selectedMasterrekd.type" inputId="typeD" label="Detail" />
+                    <label class="leading-none ml-2">D (Detail)</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div class="flex flex-col gap-2">
+            <label>Status</label>
+            <div class="flex items-center">
+                <p-radioButton name="status" value="1" [(ngModel)]="selectedMasterrekd.status" inputId="statusAktif" label="Aktif" />
+                <label class="leading-none ml-2">Aktif</label>
+            </div>
+            <div class="flex items-center">
+                <p-radioButton name="status" value="0" [(ngModel)]="selectedMasterrekd.status" inputId="statusNonAktif" label="Tidak Aktif" />
+                <label class="leading-none ml-2">Tidak aktif</label>
+            </div>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <p-button label="Batal" icon="pi pi-times" styleClass="p-button-text" (click)="masterrekdDialog=false"></p-button>
+        <p-button label="Simpan" icon="pi pi-check" (click)="savePendapatan()"></p-button>
+    </ng-template>
+</p-dialog>
+
+<!-- Dialog Neraca -->
+<p-dialog [(visible)]="masterreknrcDialog" [modal]="true" [style]="{width: '400px'}" header="{{ masterreknrcEdit ? 'Edit' : 'Tambah' }} Neraca">
+    <div class="p-fluid flex flex-col gap-4">
+        <!-- Level -->
+        <div class="flex flex-col gap-2">
+            <label for="mtglevel">Level</label>
+            <p-select [(ngModel)]="selectedMasterrekd.mtglevel" [options]="masterjnsstrurekOptions" optionLabel="label" optionValue="value" placeholder="Pilih Kode level"> </p-select>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label for="kdrek">Kode Rekening</label>
+            <input id="kdrek" type="text" pInputText [(ngModel)]="selectedMasterreknrc.kdrek" required />
+        </div>
+        <div class="flex flex-col gap-2">
+            <label for="nmrek">Nama Rekening</label>
+            <input id="nmrek" type="text" pInputText [(ngModel)]="selectedMasterreknrc.nmrek" />
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label>Tipe Rekening</label>
+            <div class="flex gap-4">
+                <div class="flex items-center">
+                    <p-radioButton name="type" value="H" [(ngModel)]="selectedMasterreknrc.type" inputId="typeH" label="Header" />
+                    <label>Header</label>
+                </div>
+                <div class="flex items-center">
+                    <p-radioButton name="type" value="D" [(ngModel)]="selectedMasterreknrc.type" inputId="typeD" label="Detail" />
+                    <label>Detail</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <ng-template pTemplate="footer">
+        <p-button label="Batal" icon="pi pi-times" styleClass="p-button-text" (click)="masterreknrcDialog=false"></p-button>
+        <p-button label="Simpan" icon="pi pi-check" (click)="saveNeraca()"></p-button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog></p-confirmDialog>
+<p-toast></p-toast>

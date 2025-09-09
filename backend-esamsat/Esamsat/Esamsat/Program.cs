@@ -16,6 +16,16 @@ builder.Services.AddDbContext<DataContext>(options =>
 builder.Services.AddSingleton<EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAppgroupuserRepository, AppgroupuserRepository>();
+builder.Services.AddScoped<IMasterrekdRepository, MasterrekdRepository>();
+builder.Services.AddScoped<IMasterreknrcRepository, MasterreknrcRepository>();
+builder.Services.AddScoped<IMasteruptRepository, MasteruptRepository>();
+builder.Services.AddScoped<IMasterpegawaiRepository, MasterpegawaiRepository>();
+builder.Services.AddScoped<IMasterbendaharaRepository, MasterbendaharaRepository>();
+builder.Services.AddScoped<IMasterbankRepository, MasterbankRepository>();
+builder.Services.AddScoped<IJnsstrurekRepository, JnsstrurekRepository>();
+builder.Services.AddScoped<IMasterkabkotumRepository, MasterkabkotumRepository>();
+builder.Services.AddScoped<IMasterktpRepository, MasterktpRepository>();
+builder.Services.AddScoped<IJnspajakRepository, JnspajakRepository>();
 
 // Tambahkan session
 builder.Services.AddDistributedMemoryCache();

@@ -2,25 +2,40 @@
 <p-card class="mb-4">
     <div class="flex justify-content-between align-items-center mb-3">
         <!-- <h2 class="m-0">Manajemen User</h2> -->
-        <!-- <p-button label="Tambah User" icon="pi pi-plus" (click)="openNewUser()" class="p-button-sm"></p-button> -->
+        <p-button label="Tambah Pengguna" icon="pi pi-plus" routerLink="/management-users/register-user" class="p-button-sm"></p-button>
     </div>
 
     <!-- Filter -->
     <div class="flex gap-3 mb-3">
         <span class="p-input-icon-left w-full md:w-30rem">
-            <i class="pi pi-search mb-2"></i>
-            <input #searchBox pInputText type="text" placeholder="Cari Nama atau Email..." (input)="dt.filterGlobal(searchBox.value, 'contains')" class="w-full" />
+            <p-iconField>
+                <input #searchBox pInputText type="text" placeholder="Search" (input)="dt.filterGlobal(searchBox.value, 'contains')" class="w-full" />
+                <p-inputicon class="pi pi-search" />
+            </p-iconField>
         </span>
     </div>
 
-    <p-table #dt [value]="users" [loading]="loading" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,20]" responsiveLayout="scroll" class="p-datatable-gridlines p-datatable-sm" [globalFilterFields]="['nama','email']">
+    <p-table
+        #dt
+        [value]="users"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[5,10,20]"
+        responsiveLayout="scroll"
+        class="p-datatable-gridlines p-datatable-sm"
+        [globalFilterFields]="['nama','email', 'kdgroup']"
+        [sortField]="'createdate'"
+        [sortOrder]="-1"
+    >
+        <!-- -1 untuk urut terbaru, 1 untuk terlama -->>
         <ng-template pTemplate="header">
             <tr>
-                <th>UserID</th>
-                <th>Nama</th>
-                <th>Email</th>
-                <th>Group</th>
-                <th>Tanggal Dibuat</th>
+                <th pSortableColumn="userid">UserID <p-sortIcon field="userid"></p-sortIcon></th>
+                <th pSortableColumn="nama">Nama <p-sortIcon field="nama"></p-sortIcon></th>
+                <th pSortableColumn="email">Email <p-sortIcon field="email"></p-sortIcon></th>
+                <th pSortableColumn="kdgroup">Group <p-sortIcon field="kdgroup"></p-sortIcon></th>
+                <th pSortableColumn="createdate">Tanggal Dibuat <p-sortIcon field="createdate"></p-sortIcon></th>
                 <th style="width: 120px; text-align: center">Aksi</th>
             </tr>
         </ng-template>
@@ -60,7 +75,7 @@
             <input id="password" type="password" pInputText [(ngModel)]="selectedUser.password" />
         </div>
         <div class="flex justify-content-end mt-3">
-            <p-button label="Simpan" icon="pi pi-check" (click)="saveUser()" class="p-button-success"></p-button>
+            <p-button label="Simpan" icon="pi pi-check" [loading]="loading" (click)="saveUser()" styleClass="p-button-success"></p-button>
         </div>
     </div>
 </p-dialog>

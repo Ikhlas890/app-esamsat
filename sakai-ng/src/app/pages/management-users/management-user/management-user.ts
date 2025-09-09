@@ -12,6 +12,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { PasswordModule } from 'primeng/password';
+import { InputIconModule } from 'primeng/inputicon';
+import { IconFieldModule } from 'primeng/iconfield';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-management-user',
@@ -26,8 +29,11 @@ import { PasswordModule } from 'primeng/password';
     DialogModule,
     InputTextModule,
     SelectModule,
-    FormsModule
-  ],
+    FormsModule,
+    InputIconModule,
+    IconFieldModule,
+    RouterModule
+],
   providers: [ConfirmationService, MessageService],
   templateUrl: './management-user.html',
   styleUrl: './management-user.scss'
@@ -94,28 +100,27 @@ export class ManagementUser implements OnInit {
   }
 
   saveUser() {
-  if (this.selectedUser) {
-    const payload: any = {
-      nama: this.selectedUser.nama,
-      email: this.selectedUser.email,
-      kdgroup: this.selectedUser.kdgroup
-    };
+    if (this.selectedUser) {
+      const payload: any = {
+        nama: this.selectedUser.nama,
+        email: this.selectedUser.email,
+        kdgroup: this.selectedUser.kdgroup
+      };
 
-    if (this.selectedUser.password?.trim()) {
-      payload.password = this.selectedUser.password;
-    }
-
-    this.authService.updateUser(this.selectedUser.userid, payload).subscribe({
-      next: () => {
-        this.messageService.add({ severity: 'success', summary: 'Berhasil', detail: 'User berhasil diperbarui' });
-        this.loadUsers();
-        this.editDialogVisible = false;
-      },
-      error: () => {
-        this.messageService.add({ severity: 'error', summary: 'Gagal', detail: 'Gagal memperbarui user' });
+      if (this.selectedUser.password?.trim()) {
+        payload.password = this.selectedUser.password;
       }
-    });
-  }
-}
 
+      this.authService.updateUser(this.selectedUser.userid, payload).subscribe({
+        next: () => {
+          this.messageService.add({ severity: 'success', summary: 'Berhasil', detail: 'User berhasil diperbarui' });
+          this.loadUsers();
+          this.editDialogVisible = false;
+        },
+        error: () => {
+          this.messageService.add({ severity: 'error', summary: 'Gagal', detail: 'Gagal memperbarui user' });
+        }
+      });
+    }
+  }
 }

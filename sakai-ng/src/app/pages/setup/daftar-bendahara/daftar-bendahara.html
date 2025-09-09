@@ -1,0 +1,161 @@
+<h4>Daftar Bendahara</h4>
+<p-card class="mb-4">
+    <div class="flex justify-content-between align-items-center mb-3">
+        <p-button label="Tambah Bendahara" icon="pi pi-plus" (click)="openNewDaftar()"></p-button>
+    </div>
+</p-card>
+
+<!-- Filter/Search -->
+<div class="flex gap-3 mb-3">
+    <span class="p-input-icon-left w-full md:w-30rem">
+        <p-iconField>
+            <input #dtSearch pInputText type="text" placeholder="Search" (input)="dtTable.filterGlobal(dtSearch.value, 'contains')" class="w-full" />
+            <p-inputicon class="pi pi-search" />
+        </p-iconField>
+    </span>
+</div>
+
+<p-table
+    #dtTable
+    [value]="masterbendaharaList"
+    [loading]="loadingDaftar"
+    [paginator]="true"
+    [rows]="10"
+    [rowsPerPageOptions]="[5,10,20]"
+    [globalFilterFields]="['koordinator','jabatan','pangkat','status']"
+    [sortField]="'koordinator'"
+    [sortOrder]="1"
+    responsiveLayout="scroll"
+    class="p-datatable-gridlines p-datatable-sm"
+>
+    <ng-template pTemplate="header">
+        <tr>
+            <th pSortableColumn="koordinator">Koordinator <p-sortIcon field="koordinator"></p-sortIcon></th>
+            <th pSortableColumn="norek">Nomor Rekening <p-sortIcon field="norek"></p-sortIcon></th>
+            <th pSortableColumn="nama">Nama<p-sortIcon field="nama"></p-sortIcon></th>
+            <th pSortableColumn="jabatan">Jabatan <p-sortIcon field="jabatan"></p-sortIcon></th>
+            <th pSortableColumn="pangkat">Pangkat <p-sortIcon field="pangkat"></p-sortIcon></th>
+            <th pSortableColumn="status">Status <p-sortIcon field="status"></p-sortIcon></th>
+            <th>Aksi</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-item>
+        <tr>
+            <td>{{ getKoordinatorLabel(item.koordinator) }}</td>
+            <td>{{ item.norek }}</td>
+            <td>{{ item.nama }}</td>
+            <td>{{ item.jabatan }}</td>
+            <td>{{ item.pangkat }}</td>
+            <td>{{ getStatusLabel(item.status) }}</td>
+            <td>
+                <p-button icon="pi pi-pencil" styleClass="p-button-text p-button-sm mr-2" (click)="editDaftar(item)"></p-button>
+                <p-button icon="pi pi-trash" styleClass="p-button-text p-button-sm p-button-danger" (click)="confirmDeleteDaftar(item)"> </p-button>
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<!-- Dialog Pendapatan -->
+<p-dialog [(visible)]="masterbendaharaDialog" [modal]="true" [style]="{width: '1200px'}" header="{{ masterbendaharaEdit ? 'Edit' : 'Tambah' }} Daftar">
+    <div class="p-fluid flex flex-col gap-4">
+        <!-- ID BENDAHARA (Readonly saat edit) -->
+        <div class="flex flex-col gap-2" *ngIf="masterbendaharaEdit">
+            <label for="idbend">ID Bendahara</label>
+            <input id="idbend" type="text" pInputText [(ngModel)]="selectedMasterbendahara.idbend" readonly />
+        </div>
+
+        <!-- Nama pegawai -->
+        <div class="flex flex-col gap-2">
+            <label for="nama">Nama bendahara</label>
+            <p-select [options]="masterpegawaiOptions" [(ngModel)]="selectedMasterbendahara.idpegawai" placeholder="Pilih Nama Pegawai" optionLabel="label" optionValue="value" (onChange)="onPegawaiChange($event)"> </p-select>
+        </div>
+
+        <!-- BANK -->
+        <div class="flex flex-col gap-2">
+            <label for="idbank">Nama Bank</label>
+            <p-select [options]="masterbankOptions" [(ngModel)]="selectedMasterbendahara.idbank" placeholder="Pilih BANK" optionLabel="label" optionValue="value"> </p-select>
+        </div>
+
+        <!-- Nomor Rekening -->
+        <div class="flex flex-col gap-2">
+            <label for="norek">Nomor Rekening</label>
+            <input id="norek" type="text" pInputText [(ngModel)]="selectedMasterbendahara.norek" required />
+        </div>
+
+        <!-- Keterangan -->
+        <div class="flex flex-col gap-2">
+            <label for="ket">Keterangan (opsional)</label>
+            <input id="ket" type="text" pInputText [(ngModel)]="selectedMasterbendahara.ket" />
+        </div>
+
+        <!-- ID Reknrc -->
+        <div class="flex flex-col gap-2">
+            <label for="idreknrc">Kode Rekening Kas Neraca</label>
+            <p-autoComplete [(ngModel)]="selectedMasterbendahara.idreknrc" [suggestions]="filteredReknrc" (completeMethod)="searchReknrc($event)" field="value" [forceSelection]="true" [dropdown]="true" placeholder="Pilih Rekening (neraca)">
+            </p-autoComplete>
+        </div>
+
+        <!-- Koordinator -->
+        <div class="flex flex-col gap-2">
+            <label for="koordinator">Koordinator</label>
+            <p-select [options]="masteruptOptions" [(ngModel)]="selectedMasterbendahara.koordinator " placeholder="Pilih Nama UPT" optionLabel="label" optionValue="value"> </p-select>
+        </div>
+
+        <!-- Jabatan -->
+        <div class="flex flex-col gap-2">
+            <label for="jabatan">Jabatan</label>
+            <input id="jabatan" type="text" pInputText [(ngModel)]="selectedMasterbendahara.jabatan" readonly />
+        </div>
+
+        <!-- Pangkat -->
+        <div class="flex flex-col gap-2">
+            <label for="pangkat">Pangkat</label>
+            <input id="pangkat" type="text" pInputText [(ngModel)]="selectedMasterbendahara.pangkat" readonly />
+        </div>
+
+        <!-- UID -->
+        <div class="flex flex-col gap-2">
+            <label for="uid">UID</label>
+            <input id="uid" type="text" pInputText [(ngModel)]="selectedMasterbendahara.uid" />
+        </div>
+
+        <!-- Nama Rekening -->
+        <div class="flex flex-col gap-2">
+            <label for="namarek">Nama Rekening</label>
+            <input id="namarek" type="text" pInputText [(ngModel)]="selectedMasterbendahara.namarek" required />
+        </div>
+
+        <!-- Telepon -->
+        <div class="flex flex-col gap-2">
+            <label for="telepon">Telepon (opsional)</label>
+            <input id="telepon" type="text" pInputText [(ngModel)]="selectedMasterbendahara.telepon" required />
+        </div>
+
+        <!-- Jenis Bendahara -->
+        <div class="flex flex-col gap-2">
+            <label for="jnsbend">Pilih Bendahara</label>
+            <p-select [options]="jenisBendaharaOptions" [(ngModel)]="selectedMasterbendahara.jnsbend" placeholder="Pilih Bendahara" optionLabel="label" optionValue="value"> </p-select>
+        </div>
+
+        <!-- Status -->
+        <div class="flex flex-col gap-2">
+            <label>Status</label>
+            <div class="flex items-center">
+                <p-radioButton id="status1" name="status" value="1" [(ngModel)]="selectedMasterbendahara.status" inputId="statusAktif" label="Aktif" />
+                <label for="status1" class="leading-none ml-2">Aktif</label>
+            </div>
+            <div class="flex items-center">
+                <p-radioButton id="status2" name="status" value="0" [(ngModel)]="selectedMasterbendahara.status" inputId="statusNonAktif" label="Tidak Aktif" />
+                <label for="status2" class="leading-none ml-2">Tidak aktif</label>
+            </div>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <p-button label="Batal" icon="pi pi-times" styleClass="p-button-text" (click)="masterbendaharaDialog=false"></p-button>
+        <p-button label="Simpan" icon="pi pi-check" (click)="saveDaftar()"></p-button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog></p-confirmDialog>
+<p-toast></p-toast>

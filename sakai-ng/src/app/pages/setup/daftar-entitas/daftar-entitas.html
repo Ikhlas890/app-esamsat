@@ -1,0 +1,163 @@
+<h4>Daftar Entitas</h4>
+<p-card class="mb-4">
+    <div class="flex justify-content-between align-items-center mb-3">
+        <p-button label="Tambah Data Instansi" icon="pi pi-plus" (click)="openNewDaftar()"></p-button>
+    </div>
+</p-card>
+
+<!-- Filter/Search -->
+<div class="flex gap-3 mb-3">
+    <span class="p-input-icon-left w-full md:w-30rem">
+        <p-iconField>
+            <input #dtSearch pInputText type="text" placeholder="Search" (input)="dtTable.filterGlobal(dtSearch.value, 'contains')" class="w-full" />
+            <p-inputicon class="pi pi-search" />
+        </p-iconField>
+    </span>
+</div>
+
+<p-table
+    #dtTable
+    [value]="masteruptList"
+    [loading]="loadingDaftar"
+    [paginator]="true"
+    [rows]="10"
+    [rowsPerPageOptions]="[5,10,20]"
+    [globalFilterFields]="['kdupt','nmupt','akroupt','status']"
+    [sortField]="'kdupt'"
+    [sortOrder]="1"
+    responsiveLayout="scroll"
+    class="p-datatable-gridlines p-datatable-sm"
+>
+    <ng-template pTemplate="header">
+        <tr>
+            <th pSortableColumn="kdupt">Kode UPT <p-sortIcon field="kdupt"></p-sortIcon></th>
+            <th pSortableColumn="nmupt">Nama UPT <p-sortIcon field="nmupt"></p-sortIcon></th>
+            <th pSortableColumn="kdlevel">Level <p-sortIcon field="kdlevel"></p-sortIcon></th>
+            <th pSortableColumn="status">Status <p-sortIcon field="status"></p-sortIcon></th>
+            <th>Aksi</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-item>
+        <tr>
+            <td>{{ item.kdupt }}</td>
+            <td>{{ item.nmupt }}</td>
+            <td>{{ item.kdlevel }}</td>
+            <td>{{ getStatusLabel(item.status) }}</td>
+            <td>
+                <p-button icon="pi pi-pencil" styleClass="p-button-text p-button-sm mr-2" (click)="editDaftar(item)"></p-button>
+                <p-button icon="pi pi-trash" styleClass="p-button-text p-button-sm p-button-danger" (click)="confirmDeleteDaftar(item)"> </p-button>
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<!-- Dialog Pendapatan -->
+<p-dialog [(visible)]="masteruptDialog" [modal]="true" [style]="{width: '700px'}" header="{{ masteruptEdit ? 'Edit' : 'Tambah' }} Daftar">
+    <div class="p-fluid flex flex-col gap-4">
+        <!-- ID UPT (Readonly saat edit) -->
+        <div class="flex flex-col gap-2" *ngIf="masteruptEdit">
+            <label for="idupt">ID UPT</label>
+            <input id="idupt" type="text" pInputText [(ngModel)]="selectedMasterupt.idupt" readonly />
+        </div>
+
+        <div class="flex flex-wrap gap-6">
+            <!-- Kode Level -->
+            <div class="flex flex-col grow basis-0 gap-2">
+                <label for="kdlevel">Level</label>
+                <p-select [(ngModel)]="selectedMasterupt.kdlevel" [options]="kdLevelOptions" optionLabel="label" optionValue="value" placeholder="Pilih level"> </p-select>
+            </div>
+            <!-- Unit Induk / Parent -->
+            <div class="flex flex-col grow basis-0 gap-2">
+                <label for="idparent">Parent</label>
+                <p-select [(ngModel)]="selectedMasterupt.idparent" [options]="parentOptions" optionLabel="label" optionValue="value" placeholder="Pilih rekening induk (jika ada)"> </p-select>
+            </div>
+        </div>
+
+        <!-- Kode UPT -->
+        <div class="flex flex-col gap-2">
+            <label for="kdupt">Kode UPT</label>
+            <input id="kdupt" type="text" pInputText [(ngModel)]="selectedMasterupt.kdupt" required />
+        </div>
+
+        <!-- Nama UPT -->
+        <div class="flex flex-col gap-2">
+            <label for="nmupt">Nama UPT</label>
+            <input id="nmupt" type="text" pInputText [(ngModel)]="selectedMasterupt.nmupt" required />
+        </div>
+
+        <!-- Jenis Kab/Kota -->
+        <div class="flex flex-col gap-2">
+            <label for="idkabkota">Pilih Kabupaten/Kota</label>
+            <p-select [(ngModel)]="selectedMasterupt.idkabkota" [options]="masterkabkotumOptions" optionLabel="label" optionValue="value" placeholder="Pilih kabupaten/kota"> </p-select>
+        </div>
+
+        <!-- Alamat -->
+        <div class="flex flex-col gap-2">
+            <label for="alamat">Alamat</label>
+            <input id="alamat" type="text" pInputText [(ngModel)]="selectedMasterupt.alamat" />
+        </div>
+
+        <!-- Jenis Bank -->
+        <div class="flex flex-col gap-2">
+            <label for="idbank">Pilih Bank</label>
+            <p-select [(ngModel)]="selectedMasterupt.idbank" [options]="masterbankOptions" optionLabel="label" optionValue="value" placeholder="Pilih Bank"> </p-select>
+        </div>
+
+        <!-- Jenis Kepala -->
+        <div class="flex flex-col gap-2">
+            <label for="kepala">Pilih Kepala</label>
+            <p-select [(ngModel)]="selectedMasterupt.kepala" [options]="masterpegawaiOptions" optionLabel="label" optionValue="value" placeholder="Pilih kepala"> </p-select>
+        </div>
+
+        <!-- Koordinator -->
+        <div class="flex flex-col gap-2">
+            <label for="koordinator">Pilih Koordinator</label>
+            <p-select [(ngModel)]="selectedMasterupt.koordinator" [options]="masterpegawaiOptions" optionLabel="label" optionValue="value" placeholder="Pilih koordinator"> </p-select>
+        </div>
+
+        <!-- Bendahara -->
+        <div class="flex flex-col gap-2">
+            <label for="bendahara">Pilih Bendahara</label>
+            <p-select [(ngModel)]="selectedMasterupt.bendahara" [options]="masterpegawaiOptions" optionLabel="label" optionValue="value" placeholder="Pilih bendahara"> </p-select>
+        </div>
+
+        <!-- Jenis Type -->
+        <div class="flex flex-col gap-2">
+            <label for="type">Tipe</label>
+            <p-select [(ngModel)]="selectedMasterupt.type" [options]="jenisTypeOptions" optionLabel="label" optionValue="value" placeholder="Pilih jenis type"> </p-select>
+        </div>
+
+        <!-- Akroupt -->
+        <div class="flex flex-col gap-2">
+            <label for="akroupt">Akronim Unit Pelaksana Teknis</label>
+            <input id="akroupt" type="text" pInputText [(ngModel)]="selectedMasterupt.akroupt" required />
+        </div>
+
+        <!-- Nomor Telepon -->
+        <div class="flex flex-col gap-2">
+            <label for="telepon">Telepon</label>
+            <input id="telepon" type="text" pInputText [(ngModel)]="selectedMasterupt.telepon" />
+        </div>
+
+        <!-- Status -->
+        <div class="flex flex-col gap-2">
+            <label>Status</label>
+            <div class="flex items-center">
+                <p-radioButton id="status1" name="status" value="1" [(ngModel)]="selectedMasterupt.status" inputId="statusAktif" label="Aktif" />
+                <label for="status1" class="leading-none ml-2">Aktif</label>
+            </div>
+            <div class="flex items-center">
+                <p-radioButton id="status2" name="status" value="0" [(ngModel)]="selectedMasterupt.status" inputId="statusNonAktif" label="Tidak Aktif" />
+                <label for="status2" class="leading-none ml-2">Tidak aktif</label>
+            </div>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <p-button label="Batal" icon="pi pi-times" styleClass="p-button-text" (click)="masteruptDialog=false"></p-button>
+        <p-button label="Simpan" icon="pi pi-check" (click)="saveDaftar()"></p-button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog></p-confirmDialog>
+<p-toast></p-toast>

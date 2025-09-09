@@ -22,14 +22,22 @@ export class AppMenu {
         this.model = [
             {
                 label: 'Home',
-                items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/'] }]
+                items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/dashboard'] }]
             },
-             {
-                label: 'Settings',
+            {
+                label: 'Management Users',
                 items: [
-                    { label: 'Management Users', icon: 'pi pi-fw pi-user', routerLink: ['/management-user'] },
-                    { label: 'Register Users', icon: 'pi pi-fw pi-user-plus', routerLink: ['/register-user'] },
-                    { label: 'Kelompok Users', icon: 'pi pi-fw pi-users', routerLink: ['/kelompok-user'] }
+                    { label: 'Manajemen Pengguna', icon: 'pi pi-fw pi-user', routerLink: ['/management-users/manajemen-pengguna'] },
+                    { label: 'Kelompok Pengguna', icon: 'pi pi-fw pi-users', routerLink: ['/management-users/kelompok-pengguna'] }
+                ]
+            },
+            {
+                label: 'Setup',
+                items: [
+                    { label: 'Kode Rekening', icon: 'pi pi-fw pi-book', routerLink: ['/setup/kode-rekening'] },
+                    { label: 'Daftar Entitas', icon: 'pi pi-fw pi-building', routerLink: ['/setup/daftar-entitas'] },
+                    { label: 'Daftar Pengawai', icon: 'pi pi-fw pi-users', routerLink: ['/setup/daftar-pegawai'] },
+                    { label: 'Daftar Bendahara', icon: 'pi pi-fw pi-wallet', routerLink: ['/setup/daftar-bendahara'] }
                 ]
             },
             {

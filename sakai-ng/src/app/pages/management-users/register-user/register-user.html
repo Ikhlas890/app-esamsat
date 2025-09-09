@@ -20,5 +20,8 @@
         <label for="kdgroup">Kode Group</label>
         <p-select id="kdgroup" [(ngModel)]="kdgroup" [options]="dropdownItems" optionLabel="label" optionValue="value" placeholder="Select One" class="w-full"> </p-select>
     </div>
+<div class="button-container">
     <p-button type="button" label="Register" (click)="register()" [loading]="loading"></p-button>
+    <p-button type="button" label="Kembali" styleClass="p-button p-button-text p-button-danger" routerLink="/management-users/manajemen-pengguna"></p-button>
+</div>
 </div>
