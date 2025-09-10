@@ -15,8 +15,11 @@
                         <p-button label="Tambah Pendapatan" icon="pi pi-plus" (click)="openNewPendapatan()"></p-button>
                     </div>
 
-                    <!-- Filter/Search -->
                     <div class="flex gap-3 mb-3">
+                        <!-- Filter Jenis Pajak -->
+                        <p-select [options]="jnspajakOptions" optionLabel="label" optionValue="value" placeholder="Filter Jenis Pajak" (onChange)="filterByJenisPajak($event.value)" class="w-full md:w-20rem"></p-select>
+
+                        <!-- Filter Pencarian -->
                         <span class="p-input-icon-left w-full md:w-30rem">
                             <p-iconField>
                                 <input #pendapatanSearch pInputText type="text" placeholder="Search" (input)="pendapatanTable.filterGlobal(pendapatanSearch.value, 'contains')" class="w-full" />
@@ -42,6 +45,7 @@
                             <tr>
                                 <th pSortableColumn="kdrek">Kode Rek <p-sortIcon field="kdrek"></p-sortIcon></th>
                                 <th pSortableColumn="nmrek">Uraian <p-sortIcon field="nmrek"></p-sortIcon></th>
+                                <th pSortableColumn="kdjnspjk">Jenis Pajak <p-sortIcon field="kdjnspjk"></p-sortIcon></th>
                                 <th pSortableColumn="type">Type <p-sortIcon field="type"></p-sortIcon></th>
                                 <th pSortableColumn="status">Status <p-sortIcon field="status"></p-sortIcon></th>
                                 <th>Aksi</th>
@@ -51,6 +55,7 @@
                             <tr>
                                 <td>{{ item.kdrek }}</td>
                                 <td>{{ item.nmrek }}</td>
+                                <td>{{ getJenisPajakLabel(item.kdjnspjk) }}</td>
                                 <td>{{ item.type }}</td>
                                 <td>{{ getStatusLabel(item.status) }}</td>
                                 <td>
@@ -133,10 +138,10 @@
                 <p-select [(ngModel)]="selectedMasterrekd.mtglevel" [options]="masterjnsstrurekOptions" optionLabel="label" optionValue="value" placeholder="Pilih Kode level"> </p-select>
             </div>
             <!-- Rekening Induk -->
-            <div class="flex flex-col grow basis-0 gap-2">
+            <!-- <div class="flex flex-col grow basis-0 gap-2">
                 <label for="idparent">Parent</label>
                 <p-select [(ngModel)]="selectedMasterrekd.idparent" [options]="parentOptions" optionLabel="label" optionValue="value" placeholder="Pilih rekening induk (jika ada)"> </p-select>
-            </div>
+            </div> -->
         </div>
 
         <!-- Kode Rekening -->
@@ -175,13 +180,15 @@
         <!-- Status -->
         <div class="flex flex-col gap-2">
             <label>Status</label>
-            <div class="flex items-center">
-                <p-radioButton name="status" value="1" [(ngModel)]="selectedMasterrekd.status" inputId="statusAktif" label="Aktif" />
-                <label class="leading-none ml-2">Aktif</label>
-            </div>
-            <div class="flex items-center">
-                <p-radioButton name="status" value="0" [(ngModel)]="selectedMasterrekd.status" inputId="statusNonAktif" label="Tidak Aktif" />
-                <label class="leading-none ml-2">Tidak aktif</label>
+            <div class="flex gap-4">
+                <div class="flex items-center">
+                    <p-radioButton name="status" value="1" [(ngModel)]="selectedMasterrekd.status" inputId="statusAktif" label="Aktif" />
+                    <label class="leading-none ml-2">Aktif</label>
+                </div>
+                <div class="flex items-center">
+                    <p-radioButton name="status" value="0" [(ngModel)]="selectedMasterrekd.status" inputId="statusNonAktif" label="Tidak Aktif" />
+                    <label class="leading-none ml-2">Tidak aktif</label>
+                </div>
             </div>
         </div>
     </div>

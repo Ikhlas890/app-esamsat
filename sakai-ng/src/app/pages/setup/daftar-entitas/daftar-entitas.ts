@@ -76,7 +76,7 @@ export class DaftarEntitas implements OnInit {
       kdupt: '',
       nmupt: '',
       kdlevel: '',
-      type: '',
+      type: '1',
       akroupt: '',
       alamat: '',
       telepon: '',
@@ -93,11 +93,8 @@ export class DaftarEntitas implements OnInit {
   parentOptions: { label: string; value: number | null }[] = [];
 
   jenisTypeOptions = [
-    // Opsi untuk nilai NULL atau kosong di database
-    { label: '--- Pilih Type ---', value: null },
-    { label: 'OPD', value: '1' },
-    { label: 'UPT', value: '2' },
-    { label: 'Kantor Pusat', value: '3' },
+    { label: 'Header', value: '1' },
+    { label: 'Detail', value: '0' }
   ];
 
   kdLevelOptions = [
@@ -116,6 +113,11 @@ export class DaftarEntitas implements OnInit {
   // Ambil data jenis type dari value jenisTypeOptions
   getJenisTypeLabel(value: string): string {
     const found = this.jenisTypeOptions.find(opt => opt.value === value);
+    return found ? found.label : '-';
+  }
+
+  getKdLevelLabel(value: string): string {
+    const found = this.kdLevelOptions.find(opt => opt.value === value);
     return found ? found.label : '-';
   }
 
@@ -196,7 +198,7 @@ export class DaftarEntitas implements OnInit {
       kdupt: this.selectedMasterupt.kdupt || '',
       nmupt: this.selectedMasterupt.nmupt || '',
       kdlevel: this.selectedMasterupt.kdlevel?.toString() || '0',
-      type: this.selectedMasterupt.type?.trim() || '',
+      type: this.selectedMasterupt.type?.trim() || '1',
       akroupt: this.selectedMasterupt.akroupt || '',
       alamat: this.selectedMasterupt.alamat || '',
       telepon: this.selectedMasterupt.telepon || '',

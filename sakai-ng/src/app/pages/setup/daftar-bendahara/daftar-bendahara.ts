@@ -87,7 +87,7 @@ export class DaftarBendahara implements OnInit {
       idbank: 0,
       norek: '',
       namarek: '',
-      jnsbend: '',
+      jnsbend: '1',
       status: '1',
       jabatan: '',
       pangkat: '',
@@ -101,8 +101,7 @@ export class DaftarBendahara implements OnInit {
   }
 
   jenisBendaharaOptions = [
-    { label: 'Bendahara Penerimaan', value: '1' },
-    { label: 'Bendahara Penggeluaran', value: '2' },
+    { label: 'Bendahara Penerimaan', value: '1' }
   ];
 
   statusOptions = [
@@ -178,10 +177,12 @@ export class DaftarBendahara implements OnInit {
   searchReknrc(event: any) {
     const query = event.query;
     this.masterreknrcService.getForSelect(query).subscribe(data => {
-      this.filteredReknrc = data.map(r => ({ label: r.nmrek, value: r.idreknrc }));
+      this.filteredReknrc = data.map(r => ({
+        label: `${r.kdrek} - ${r.nmrek}`,
+        value: r.idreknrc
+      }));
     });
   }
-
 
   onPegawaiChange(event: any) {
     const selectedId = event.value; // idpegawai yang dipilih
@@ -214,7 +215,7 @@ export class DaftarBendahara implements OnInit {
       idbank: this.selectedMasterbendahara.idbank ?? null,
       norek: this.selectedMasterbendahara.norek || '',
       namarek: this.selectedMasterbendahara.namarek || '',
-      jnsbend: this.selectedMasterbendahara.jnsbend?.trim() || '',
+      jnsbend: this.selectedMasterbendahara.jnsbend?.trim() || '1',
       status: this.selectedMasterbendahara.status || '1',
       jabatan: this.selectedMasterbendahara.jabatan || '',
       pangkat: this.selectedMasterbendahara.pangkat || '',

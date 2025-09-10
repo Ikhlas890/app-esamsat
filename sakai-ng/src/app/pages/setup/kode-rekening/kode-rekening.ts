@@ -1,11 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Masterrekd, MasterrekdService } from '@/services/masterrekd.service';
 import { Masterreknrc, MasterreknrcService } from '@/services/masterreknrc.service';
 import { Masterjnsstrurek, MasterjnsstrurekService } from '@/services/jnsstrurek.service';
 import { Jnspajak, JnspajakService } from '@/services/jnspajak.service';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { TabsModule } from 'primeng/tabs';
-import { TableModule } from 'primeng/table';
+import { TableModule, Table } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { CommonModule } from '@angular/common';
@@ -41,6 +41,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
   styleUrl: './kode-rekening.scss'
 })
 export class KodeRekening implements OnInit {
+  @ViewChild('pendapatanTable') pendapatanTable!: Table;
   // Tab Management
   activeTab = 0;
 
@@ -100,6 +101,14 @@ export class KodeRekening implements OnInit {
     { label: 'Tidak Aktif', value: '0' }
   ];
 
+  filterByJenisPajak(selectedJenis: string | null) {
+    if (selectedJenis) {
+      this.pendapatanTable.filter(selectedJenis, 'kdjnspjk', 'equals');
+    } else {
+      this.pendapatanTable.filter('', 'kdjnspjk', 'equals'); // Reset filter jenis pajak
+    }
+  }
+
   getJenisPajakLabel(value: string): string {
     const found = this.jnspajakOptions.find(opt => opt.value === value);
     return found ? found.label : '-';
@@ -149,6 +158,7 @@ export class KodeRekening implements OnInit {
   loadJnspajak(): void {
     this.jnspajakService.getAll().subscribe((data: Jnspajak[]) => {
       this.jnspajakOptions = [
+        { label: 'Pilih Semua', value: null },
         ...data.map(jns => ({
           label: jns.nmjnspjk,
           value: jns.kdjnspjk

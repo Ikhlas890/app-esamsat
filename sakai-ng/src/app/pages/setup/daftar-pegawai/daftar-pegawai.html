@@ -127,6 +127,7 @@
         <!-- Status -->
         <div class="flex flex-col gap-2">
             <label>Status</label>
+            <div class="flex gap-4">
             <div class="flex items-center">
                 <p-radioButton id="status1" name="status" value="1" [(ngModel)]="selectedMasterpegawai.status" inputId="statusAktif" label="Aktif" />
                 <label for="status1" class="leading-none ml-2">Aktif</label>
@@ -134,6 +135,7 @@
             <div class="flex items-center">
                 <p-radioButton id="status2" name="status" value="0" [(ngModel)]="selectedMasterpegawai.status" inputId="statusNonAktif" label="Tidak Aktif" />
                 <label for="status2" class="leading-none ml-2">Tidak aktif</label>
+            </div>
             </div>
         </div>
     </div>

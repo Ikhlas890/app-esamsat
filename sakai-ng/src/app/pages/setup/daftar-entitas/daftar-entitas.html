@@ -41,7 +41,7 @@
         <tr>
             <td>{{ item.kdupt }}</td>
             <td>{{ item.nmupt }}</td>
-            <td>{{ item.kdlevel }}</td>
+            <td>{{ getKdLevelLabel(item.kdlevel) }}</td>
             <td>{{ getStatusLabel(item.status) }}</td>
             <td>
                 <p-button icon="pi pi-pencil" styleClass="p-button-text p-button-sm mr-2" (click)="editDaftar(item)"></p-button>
@@ -67,10 +67,10 @@
                 <p-select [(ngModel)]="selectedMasterupt.kdlevel" [options]="kdLevelOptions" optionLabel="label" optionValue="value" placeholder="Pilih level"> </p-select>
             </div>
             <!-- Unit Induk / Parent -->
-            <div class="flex flex-col grow basis-0 gap-2">
+            <!-- <div class="flex flex-col grow basis-0 gap-2">
                 <label for="idparent">Parent</label>
                 <p-select [(ngModel)]="selectedMasterupt.idparent" [options]="parentOptions" optionLabel="label" optionValue="value" placeholder="Pilih rekening induk (jika ada)"> </p-select>
-            </div>
+            </div> -->
         </div>
 
         <!-- Kode UPT -->
@@ -121,12 +121,6 @@
             <p-select [(ngModel)]="selectedMasterupt.bendahara" [options]="masterpegawaiOptions" optionLabel="label" optionValue="value" placeholder="Pilih bendahara"> </p-select>
         </div>
 
-        <!-- Jenis Type -->
-        <div class="flex flex-col gap-2">
-            <label for="type">Tipe</label>
-            <p-select [(ngModel)]="selectedMasterupt.type" [options]="jenisTypeOptions" optionLabel="label" optionValue="value" placeholder="Pilih jenis type"> </p-select>
-        </div>
-
         <!-- Akroupt -->
         <div class="flex flex-col gap-2">
             <label for="akroupt">Akronim Unit Pelaksana Teknis</label>
@@ -139,16 +133,33 @@
             <input id="telepon" type="text" pInputText [(ngModel)]="selectedMasterupt.telepon" />
         </div>
 
+        <!-- Jenis Type -->
+        <div class="flex flex-col gap-2">
+            <label for="type">Tipe</label>
+            <div class="flex gap-4">
+                <div class="flex items-center">
+                    <p-radioButton name="type" value="1" [(ngModel)]="selectedMasterupt.type" inputId="typeH" label="Header" />
+                    <label class="leading-none ml-2">H (Header)</label>
+                </div>
+                <div class="flex items-center">
+                    <p-radioButton name="type" value="0" [(ngModel)]="selectedMasterupt.type" inputId="typeD" label="Detail" />
+                    <label class="leading-none ml-2">D (Detail)</label>
+                </div>
+            </div>
+        </div>
+
         <!-- Status -->
         <div class="flex flex-col gap-2">
             <label>Status</label>
-            <div class="flex items-center">
-                <p-radioButton id="status1" name="status" value="1" [(ngModel)]="selectedMasterupt.status" inputId="statusAktif" label="Aktif" />
-                <label for="status1" class="leading-none ml-2">Aktif</label>
-            </div>
-            <div class="flex items-center">
-                <p-radioButton id="status2" name="status" value="0" [(ngModel)]="selectedMasterupt.status" inputId="statusNonAktif" label="Tidak Aktif" />
-                <label for="status2" class="leading-none ml-2">Tidak aktif</label>
+            <div class="flex gap-4">
+                <div class="flex items-center">
+                    <p-radioButton id="status1" name="status" value="1" [(ngModel)]="selectedMasterupt.status" inputId="statusAktif" label="Aktif" />
+                    <label for="status1" class="leading-none ml-2">Aktif</label>
+                </div>
+                <div class="flex items-center">
+                    <p-radioButton id="status2" name="status" value="0" [(ngModel)]="selectedMasterupt.status" inputId="statusNonAktif" label="Tidak Aktif" />
+                    <label for="status2" class="leading-none ml-2">Tidak aktif</label>
+                </div>
             </div>
         </div>
     </div>
