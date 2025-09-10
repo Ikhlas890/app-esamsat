@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Masterupt, MasteruptService } from '@/services/masterupt.service';
 import { Masterpegawai, MasterpegawaiService } from '@/services/masterpegawai.service';
 import { Masterbank, MasterbankService } from '@/services/masterbank.service';
@@ -10,13 +10,18 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { TableModule } from 'primeng/table';
+import { TableModule, Table } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToolbarModule } from 'primeng/toolbar';
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
+import { StyleClass } from "primeng/styleclass";
+
 
 @Component({
   selector: 'app-daftar-entitas',
@@ -34,8 +39,9 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
     SelectModule,
     RadioButtonModule,
     ToastModule,
-    ConfirmDialogModule
-  ],
+    ConfirmDialogModule,
+    ToolbarModule
+],
   providers: [ConfirmationService, MessageService],
   templateUrl: './daftar-entitas.html',
   styleUrl: './daftar-entitas.scss'
@@ -43,7 +49,13 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 export class DaftarEntitas implements OnInit {
   // Daftar entitas (masterupt)
   masteruptList: Masterupt[] = [];
+
+  // Untuk multi-select di tabel
+  selectedMasterupts: Masterupt[] = [];
+
+  // untuk satu record aktif (object tunggal, di form/dialog).
   selectedMasterupt: Masterupt = this.getEmptyMasterupt();
+
   masteruptDialog = false;
   masteruptEdit = false;
 
@@ -61,6 +73,30 @@ export class DaftarEntitas implements OnInit {
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) { }
+
+  // Export data (Excel)
+  @ViewChild('dt') dt!: Table;
+
+  onGlobalFilter(table: Table, event: Event) {
+    table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
+  }
+
+  exportExcel() {
+    // pilih data yg difilter, kalau tidak ada ambil semua
+    const dataToExport = this.dt?.filteredValue || this.masteruptList;
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = { Sheets: { data: worksheet }, SheetNames: ['data'] };
+
+    const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    this.saveAsExcelFile(excelBuffer, 'daftar_upt');
+  }
+
+  private saveAsExcelFile(buffer: any, fileName: string): void {
+    const data: Blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+    FileSaver.saveAs(data, `${fileName}.xlsx`);
+  }
+  // End export data (Excel)
 
   ngOnInit(): void {
     this.loadDaftar();
@@ -239,6 +275,36 @@ export class DaftarEntitas implements OnInit {
         }
       });
     }
+  }
+
+  deleteSelectedDaftar(): void {
+    if (!this.selectedMasterupts || this.selectedMasterupts.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Peringatan', detail: 'Pilih data yang ingin dihapus' });
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `Yakin ingin menghapus ${this.selectedMasterupts.length} data ini?`,
+      header: 'Konfirmasi Hapus',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        const ids = this.selectedMasterupts.map(u => u.idupt);
+        // panggil API delete untuk tiap id
+        ids.forEach(id => {
+          this.masteruptService.delete(id).subscribe({
+            next: () => {
+              this.masteruptList = this.masteruptList.filter(u => u.idupt !== id);
+            },
+            error: () => {
+              this.messageService.add({ severity: 'error', summary: 'Gagal', detail: `Gagal hapus data ID ${id}` });
+            }
+          });
+        });
+
+        this.selectedMasterupts = []; // kosongkan selection
+        this.messageService.add({ severity: 'success', summary: 'Berhasil', detail: 'Data terhapus' });
+      }
+    });
   }
 
   confirmDeleteDaftar(item: Masterupt): void {

@@ -1,23 +1,18 @@
-<h4>Daftar Bendahara</h4>
-<p-card class="mb-4">
-    <div class="flex justify-content-between align-items-center mb-3">
-        <p-button label="Tambah Bendahara" icon="pi pi-plus" (click)="openNewDaftar()"></p-button>
-    </div>
-</p-card>
+<p-toolbar class="mb-6">
+    <ng-template #start>
+        <p-button label="Tambah Data" icon="pi pi-plus" class="mr-2" (onClick)="openNewDaftar()" />
+        <p-button severity="danger" label="Delete" icon="pi pi-trash" outlined (onClick)="deleteSelectedDaftar()" [disabled]="!selectedMasterbendaharas || selectedMasterbendaharas.length === 0" />
+    </ng-template>
 
-<!-- Filter/Search -->
-<div class="flex gap-3 mb-3">
-    <span class="p-input-icon-left w-full md:w-30rem">
-        <p-iconField>
-            <input #dtSearch pInputText type="text" placeholder="Search" (input)="dtTable.filterGlobal(dtSearch.value, 'contains')" class="w-full" />
-            <p-inputicon class="pi pi-search" />
-        </p-iconField>
-    </span>
-</div>
+    <ng-template #end>
+        <p-button label="Export Excel" icon="pi pi-file-excel" severity="secondary" (onClick)="exportExcel()" />
+    </ng-template>
+</p-toolbar>
 
 <p-table
-    #dtTable
+    #dt
     [value]="masterbendaharaList"
+    [(selection)]="selectedMasterbendaharas"
     [loading]="loadingDaftar"
     [paginator]="true"
     [rows]="10"
@@ -25,11 +20,27 @@
     [globalFilterFields]="['koordinator','jabatan']"
     [sortField]="'koordinator'"
     [sortOrder]="1"
+    selectionMode="multiple"
     responsiveLayout="scroll"
     class="p-datatable-gridlines p-datatable-sm"
 >
+    <!-- Search -->
+    <ng-template pTemplate="caption">
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Daftar Bendahara</h5>
+            <p-iconfield>
+                <p-inputicon class="pi pi-search" />
+                <input pInputText type="text" placeholder="Search" (input)="onGlobalFilter(dt, $event)" />
+            </p-iconfield>
+        </div>
+    </ng-template>
+    <!-- End Search -->
+
     <ng-template pTemplate="header">
         <tr>
+            <th style="width: 3rem">
+                <p-tableHeaderCheckbox />
+            </th>
             <th pSortableColumn="koordinator">Koordinator <p-sortIcon field="koordinator"></p-sortIcon></th>
             <th pSortableColumn="norek">Nomor Rekening <p-sortIcon field="norek"></p-sortIcon></th>
             <th pSortableColumn="nama">Nama<p-sortIcon field="nama"></p-sortIcon></th>
@@ -39,6 +50,9 @@
     </ng-template>
     <ng-template pTemplate="body" let-item>
         <tr>
+            <td style="width: 3rem">
+                <p-tableCheckbox [value]="item" />
+            </td>
             <td>{{ getKoordinatorLabel(item.koordinator) }}</td>
             <td>{{ item.norek }}</td>
             <td>{{ item.nama }}</td>
@@ -94,7 +108,7 @@
         <!-- ID Reknrc -->
         <div class="flex flex-col gap-2">
             <label for="idreknrc">Kode Rekening Kas Neraca</label>
-            <p-autoComplete [(ngModel)]="selectedMasterbendahara.idreknrc" [suggestions]="filteredReknrc" (completeMethod)="searchReknrc($event)" field="value" [forceSelection]="true" [dropdown]="true" placeholder="Pilih Rekening (neraca)">
+            <p-autoComplete [(ngModel)]="selectedMasterbendahara.idreknrc" [suggestions]="filteredReknrc" (completeMethod)="searchReknrc($event)" field="value" [forceSelection]="true" [dropdown]="true" placeholder="Pilih kode rekening kas neraca">
             </p-autoComplete>
         </div>
 

@@ -18,6 +18,9 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { SelectItem, SelectModule } from 'primeng/select';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
+import { ToolbarModule } from 'primeng/toolbar';
 
 @Component({
   selector: 'app-kode-rekening',
@@ -35,27 +38,38 @@ import { RadioButtonModule } from 'primeng/radiobutton';
     ToastModule,
     ConfirmDialogModule,
     SelectModule,
-    RadioButtonModule],
+    RadioButtonModule,
+    ToolbarModule
+  ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './kode-rekening.html',
   styleUrl: './kode-rekening.scss'
 })
 export class KodeRekening implements OnInit {
-  @ViewChild('pendapatanTable') pendapatanTable!: Table;
   // Tab Management
   activeTab = 0;
 
   // Pendapatan (masterrekd)
   masterrekdList: Masterrekd[] = [];
-  selectedMasterrekd: Masterrekd = this.getEmptyMasterrekd();
   masterrekdDialog = false;
   masterrekdEdit = false;
 
+  // Untuk multi-select di tabel
+  selectedMasterrekds: Masterrekd[] = [];
+
+  // untuk satu record aktif (object tunggal, di form/dialog).
+  selectedMasterrekd: Masterrekd = this.getEmptyMasterrekd();
+
   // Neraca (masterreknrc)
   masterreknrcList: Masterreknrc[] = [];
-  selectedMasterreknrc: Masterreknrc = this.getEmptyMasterreknrc();
   masterreknrcDialog = false;
   masterreknrcEdit = false;
+
+  // Untuk multi-select di tabel
+  selectedMasterreknrcs: Masterreknrc[] = [];
+
+  // untuk satu record aktif (object tunggal, di form/dialog).
+  selectedMasterreknrc: Masterreknrc = this.getEmptyMasterreknrc();
 
   loadingPendapatan = false;
   loadingNeraca = false;
@@ -68,6 +82,47 @@ export class KodeRekening implements OnInit {
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) { }
+
+  // Export data (Excel)
+  @ViewChild('dt') dt!: Table;
+  @ViewChild('neracadt') neracadt!: Table;
+
+  onGlobalFilter(table: Table, event: Event) {
+    table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
+  }
+
+  // Export Pendapatan
+  exportExcelPendapatan() {
+    const dataToExport = this.dt?.filteredValue || this.masterrekdList;
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = { Sheets: { data: worksheet }, SheetNames: ['data'] };
+
+    const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    this.saveAsExcelFilePendapatan(excelBuffer, 'pendapatan');
+  }
+
+  private saveAsExcelFilePendapatan(buffer: any, fileName: string): void {
+    const data: Blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+    FileSaver.saveAs(data, `${fileName}.xlsx`);
+  }
+
+  // Export Neraca
+  exportExcelNeraca() {
+    const dataToExport = this.neracadt?.filteredValue || this.masterreknrcList;
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = { Sheets: { data: worksheet }, SheetNames: ['data'] };
+
+    const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    this.saveAsExcelFileNeraca(excelBuffer, 'neraca');
+  }
+
+  private saveAsExcelFileNeraca(buffer: any, fileName: string): void {
+    const data: Blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+    FileSaver.saveAs(data, `${fileName}.xlsx`);
+  }
+  // End export data (Excel)
 
   ngOnInit(): void {
     this.loadPendapatan();
@@ -103,9 +158,9 @@ export class KodeRekening implements OnInit {
 
   filterByJenisPajak(selectedJenis: string | null) {
     if (selectedJenis) {
-      this.pendapatanTable.filter(selectedJenis, 'kdjnspjk', 'equals');
+      this.dt.filter(selectedJenis, 'kdjnspjk', 'equals');
     } else {
-      this.pendapatanTable.filter('', 'kdjnspjk', 'equals'); // Reset filter jenis pajak
+      this.dt.filter('', 'kdjnspjk', 'equals'); // Reset filter jenis pajak
     }
   }
 
@@ -158,7 +213,7 @@ export class KodeRekening implements OnInit {
   loadJnspajak(): void {
     this.jnspajakService.getAll().subscribe((data: Jnspajak[]) => {
       this.jnspajakOptions = [
-        { label: 'Pilih Semua', value: null },
+        { label: 'Pilih semua', value: null },
         ...data.map(jns => ({
           label: jns.nmjnspjk,
           value: jns.kdjnspjk
@@ -235,6 +290,36 @@ export class KodeRekening implements OnInit {
     }
   }
 
+  deleteSelectedPendapatan(): void {
+    if (!this.selectedMasterrekds || this.selectedMasterrekds.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Peringatan', detail: 'Pilih data yang ingin dihapus' });
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `Yakin ingin menghapus ${this.selectedMasterrekds.length} data ini?`,
+      header: 'Konfirmasi Hapus',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        const ids = this.selectedMasterrekds.map(u => u.idrekd);
+        // panggil API delete untuk tiap id
+        ids.forEach(id => {
+          this.masterrekdService.delete(id).subscribe({
+            next: () => {
+              this.masterrekdList = this.masterrekdList.filter(u => u.idrekd !== id);
+            },
+            error: () => {
+              this.messageService.add({ severity: 'error', summary: 'Gagal', detail: `Gagal hapus data ID ${id}` });
+            }
+          });
+        });
+
+        this.selectedMasterrekds = []; // kosongkan selection
+        this.messageService.add({ severity: 'success', summary: 'Berhasil', detail: 'Data terhapus' });
+      }
+    });
+  }
+
   confirmDeletePendapatan(item: Masterrekd): void {
     this.confirmationService.confirm({
       message: `Yakin ingin menghapus pendapatan <b>${item.nmrek}</b>?`,
@@ -291,47 +376,69 @@ export class KodeRekening implements OnInit {
   }
 
   saveNeraca(): void {
-    if (this.masterreknrcEdit) {
-      this.masterreknrcService.update(this.selectedMasterreknrc.idreknrc, this.selectedMasterreknrc).subscribe({
-        next: () => {
-          this.loadNeraca();
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Berhasil',
-            detail: 'Data neraca berhasil diperbarui'
-          });
-          this.masterreknrcDialog = false;
-        },
-        error: (err) => {
-          console.error('Gagal create pendapatan', err);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Gagal',
-            detail: 'Terjadi kesalahan saat memperbarui data'
-          });
-        }
-      });
-    } else {
-      this.masterreknrcService.create(this.selectedMasterreknrc).subscribe({
-        next: () => {
-          this.loadNeraca();
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Berhasil',
-            detail: 'Data neraca berhasil ditambahkan'
-          });
-          this.masterreknrcDialog = false;
-        },
-        error: (err) => {
-          console.error('Gagal create pendapatan', err);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Gagal',
-            detail: 'Terjadi kesalahan saat menambahkan data'
-          });
-        }
-      });
+  const payload = {
+    idreknrc: this.masterreknrcEdit ? this.selectedMasterreknrc.idreknrc ?? 0 : 0,
+    kdrek: this.selectedMasterreknrc.kdrek || '',
+    nmrek: this.selectedMasterreknrc.nmrek || '',
+    type: this.selectedMasterreknrc.type || 'H',
+    createby: 'admin'
+  };
+
+  if (this.masterreknrcEdit) {
+    this.masterreknrcService.update(payload.idreknrc, payload).subscribe({
+      next: () => {
+        this.loadNeraca();
+        this.messageService.add({ severity: 'success', summary: 'Berhasil', detail: 'Data neraca berhasil diperbarui' });
+        this.masterreknrcDialog = false;
+      },
+      error: (err) => {
+        console.error('Gagal update neraca', err);
+        this.messageService.add({ severity: 'error', summary: 'Gagal', detail: 'Terjadi kesalahan saat memperbarui data' });
+      }
+    });
+  } else {
+    this.masterreknrcService.create(payload).subscribe({
+      next: () => {
+        this.loadNeraca();
+        this.messageService.add({ severity: 'success', summary: 'Berhasil', detail: 'Data neraca berhasil ditambahkan' });
+        this.masterreknrcDialog = false;
+      },
+      error: (err) => {
+        console.error('Gagal create neraca', err);
+        this.messageService.add({ severity: 'error', summary: 'Gagal', detail: 'Terjadi kesalahan saat menambahkan data' });
+      }
+    });
+  }
+}
+
+  deleteSelectedNeraca(): void {
+    if (!this.selectedMasterreknrcs || this.selectedMasterreknrcs.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Peringatan', detail: 'Pilih data yang ingin dihapus' });
+      return;
     }
+
+    this.confirmationService.confirm({
+      message: `Yakin ingin menghapus ${this.selectedMasterreknrcs.length} data ini?`,
+      header: 'Konfirmasi Hapus',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        const ids = this.selectedMasterreknrcs.map(u => u.idreknrc);
+        // panggil API delete untuk tiap id
+        ids.forEach(id => {
+          this.masterreknrcService.delete(id).subscribe({
+            next: () => {
+              this.masterreknrcList = this.masterreknrcList.filter(u => u.idreknrc !== id);
+            },
+            error: () => {
+              this.messageService.add({ severity: 'error', summary: 'Gagal', detail: `Gagal hapus data ID ${id}` });
+            }
+          });
+        });
+
+        this.selectedMasterreknrcs = []; // kosongkan selection
+        this.messageService.add({ severity: 'success', summary: 'Berhasil', detail: 'Data terhapus' });
+      }
+    });
   }
 
   confirmDeleteNeraca(item: Masterreknrc): void {

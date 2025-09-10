@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Masterbendahara, MasterbendaharaService } from '@/services/masterbendahara.service';
 import { Masterpegawai, MasterpegawaiService } from '@/services/masterpegawai.service';
 import { Masterbank, MasterbankService } from '@/services/masterbank.service';
@@ -11,7 +11,7 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { TableModule } from 'primeng/table';
+import { TableModule, Table } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -19,6 +19,9 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { AutoCompleteModule } from 'primeng/autocomplete';
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
+import { ToolbarModule } from 'primeng/toolbar';
 
 @Component({
   selector: 'app-daftar-bendahara',
@@ -37,7 +40,8 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
     RadioButtonModule,
     ToastModule,
     ConfirmDialogModule,
-    AutoCompleteModule
+    AutoCompleteModule,
+    ToolbarModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './daftar-bendahara.html',
@@ -46,7 +50,13 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
 export class DaftarBendahara implements OnInit {
   // Daftar bendahara (masterbendahara)
   masterbendaharaList: Masterbendahara[] = [];
+
+  // Untuk multi-select di tabel
+  selectedMasterbendaharas: Masterbendahara[] = [];
+
+  // untuk satu record aktif (object tunggal, di form/dialog).
   selectedMasterbendahara: Masterbendahara = this.getEmptyMasterbendahara();
+
   masterbendaharaDialog = false;
   masterbendaharaEdit = false;
 
@@ -71,6 +81,30 @@ export class DaftarBendahara implements OnInit {
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) { }
+
+  // Export data (Excel)
+  @ViewChild('dt') dt!: Table;
+
+  onGlobalFilter(table: Table, event: Event) {
+    table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
+  }
+
+  exportExcel() {
+    // pilih data yg difilter, kalau tidak ada ambil semua
+    const dataToExport = this.dt?.filteredValue || this.masterbendaharaList;
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = { Sheets: { data: worksheet }, SheetNames: ['data'] };
+
+    const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    this.saveAsExcelFile(excelBuffer, 'daftar_bendahara');
+  }
+
+  private saveAsExcelFile(buffer: any, fileName: string): void {
+    const data: Blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+    FileSaver.saveAs(data, `${fileName}.xlsx`);
+  }
+  // End export data (Excel)
 
   ngOnInit(): void {
     this.loadDaftar();
@@ -261,6 +295,35 @@ export class DaftarBendahara implements OnInit {
     }
   }
 
+  deleteSelectedDaftar(): void {
+    if (!this.selectedMasterbendaharas || this.selectedMasterbendaharas.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Peringatan', detail: 'Pilih data yang ingin dihapus' });
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `Yakin ingin menghapus ${this.selectedMasterbendaharas.length} data ini?`,
+      header: 'Konfirmasi Hapus',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        const ids = this.selectedMasterbendaharas.map(u => u.idbend);
+        // panggil API delete untuk tiap id
+        ids.forEach(id => {
+          this.masterbendaharaService.delete(id).subscribe({
+            next: () => {
+              this.masterbendaharaList = this.masterbendaharaList.filter(u => u.idbend !== id);
+            },
+            error: () => {
+              this.messageService.add({ severity: 'error', summary: 'Gagal', detail: `Gagal hapus data ID ${id}` });
+            }
+          });
+        });
+
+        this.selectedMasterbendaharas = []; // kosongkan selection
+        this.messageService.add({ severity: 'success', summary: 'Berhasil', detail: 'Data terhapus' });
+      }
+    });
+  }
 
   confirmDeleteDaftar(item: Masterbendahara): void {
     this.confirmationService.confirm({

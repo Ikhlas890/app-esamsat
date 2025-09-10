@@ -1,7 +1,5 @@
 <div class="md:w-3/4 mx-auto">
     <div class="card">
-        <div class="font-semibold text-xl mb-4">Pendapatan & Neraca</div>
-
         <p-tabs [value]="activeTab" (valueChange)="onTabChange(+$event)">
             <p-tablist>
                 <p-tab [value]="0">Pendapatan</p-tab>
@@ -11,38 +9,49 @@
             <p-tabpanels>
                 <!-- TAB 1: Pendapatan -->
                 <p-tabpanel [value]="0">
-                    <div class="mb-3">
-                        <p-button label="Tambah Pendapatan" icon="pi pi-plus" (click)="openNewPendapatan()"></p-button>
-                    </div>
+                    <p-toolbar class="mb-6">
+                        <ng-template #start>
+                            <p-button label="Tambah Data" icon="pi pi-plus" class="mr-2" (onClick)="openNewPendapatan()" />
+                            <p-button severity="danger" label="Delete" icon="pi pi-trash" outlined (onClick)="deleteSelectedPendapatan()" [disabled]="!selectedMasterrekds || selectedMasterrekds.length === 0" />
+                        </ng-template>
 
-                    <div class="flex gap-3 mb-3">
-                        <!-- Filter Jenis Pajak -->
-                        <p-select [options]="jnspajakOptions" optionLabel="label" optionValue="value" placeholder="Filter Jenis Pajak" (onChange)="filterByJenisPajak($event.value)" class="w-full md:w-20rem"></p-select>
-
-                        <!-- Filter Pencarian -->
-                        <span class="p-input-icon-left w-full md:w-30rem">
-                            <p-iconField>
-                                <input #pendapatanSearch pInputText type="text" placeholder="Search" (input)="pendapatanTable.filterGlobal(pendapatanSearch.value, 'contains')" class="w-full" />
-                                <p-inputicon class="pi pi-search" />
-                            </p-iconField>
-                        </span>
-                    </div>
+                        <ng-template #end>
+                            <p-select [options]="jnspajakOptions" optionLabel="label" optionValue="value" placeholder="Filter Jenis Pajak" (onChange)="filterByJenisPajak($event.value)" class="mr-2"></p-select>
+                            <p-button label="Export Excel" icon="pi pi-file-excel" severity="secondary" (onClick)="exportExcelPendapatan()" />
+                        </ng-template>
+                    </p-toolbar>
 
                     <p-table
-                        #pendapatanTable
+                        #dt
                         [value]="masterrekdList"
+                        [(selection)]="selectedMasterrekds"
                         [loading]="loadingPendapatan"
                         [paginator]="true"
                         [rows]="10"
                         [rowsPerPageOptions]="[5,10,20]"
                         [globalFilterFields]="['kdrek','nmrek','kdjnspjk','status']"
-                        [sortField]="'kdrek'"
+                        [sortField]="'nmrek'"
                         [sortOrder]="1"
+                        selectionMode="multiple"
                         responsiveLayout="scroll"
                         class="p-datatable-gridlines p-datatable-sm"
                     >
+                        <!--  Search -->
+                        <ng-template pTemplate="caption">
+                            <div class="flex items-center justify-between">
+                                <h5 class="m-0">Pendapatan</h5>
+                                <p-iconfield>
+                                    <p-inputicon class="pi pi-search" />
+                                    <input pInputText type="text" placeholder="Search" (input)="onGlobalFilter(dt, $event)" />
+                                </p-iconfield>
+                            </div>
+                        </ng-template>
+                        <!-- End Search -->
                         <ng-template pTemplate="header">
                             <tr>
+                                <th style="width: 3rem">
+                                    <p-tableHeaderCheckbox />
+                                </th>
                                 <th pSortableColumn="kdrek">Kode Rek <p-sortIcon field="kdrek"></p-sortIcon></th>
                                 <th pSortableColumn="nmrek">Uraian <p-sortIcon field="nmrek"></p-sortIcon></th>
                                 <th pSortableColumn="kdjnspjk">Jenis Pajak <p-sortIcon field="kdjnspjk"></p-sortIcon></th>
@@ -53,6 +62,9 @@
                         </ng-template>
                         <ng-template pTemplate="body" let-item>
                             <tr>
+                                <td style="width: 3rem">
+                                    <p-tableCheckbox [value]="item" />
+                                </td>
                                 <td>{{ item.kdrek }}</td>
                                 <td>{{ item.nmrek }}</td>
                                 <td>{{ getJenisPajakLabel(item.kdjnspjk) }}</td>
@@ -69,35 +81,50 @@
 
                 <!-- TAB 2: Neraca -->
                 <p-tabpanel [value]="1">
-                    <div class="mb-3">
-                        <p-button label="Tambah Neraca" icon="pi pi-plus" (click)="openNewNeraca()"></p-button>
-                    </div>
+                    <p-toolbar class="mb-6">
+                        <ng-template #start>
+                            <p-button label="Tambah Data" icon="pi pi-plus" class="mr-2" (onClick)="openNewNeraca()" />
+                            <p-button severity="danger" label="Delete" icon="pi pi-trash" outlined (onClick)="deleteSelectedNeraca()" [disabled]="!selectedMasterreknrcs || selectedMasterreknrcs.length === 0" />
+                        </ng-template>
 
-                    <!-- Filter/Search -->
-                    <div class="flex gap-3 mb-3">
-                        <span class="p-input-icon-left w-full md:w-30rem">
-                            <p-iconField>
-                                <input #neracaSearch pInputText type="text" placeholder="Search" (input)="neracaTable.filterGlobal(neracaSearch.value, 'contains')" class="w-full" />
-                                <p-inputicon class="pi pi-search" />
-                            </p-iconField>
-                        </span>
-                    </div>
+                        <ng-template #end>
+                            <!-- <p-select [options]="jnspajakOptions" optionLabel="label" optionValue="value" placeholder="Filter Jenis Pajak" (onChange)="filterByJenisPajak($event.value)" class="mr-2"></p-select> -->
+                            <p-button label="Export Excel" icon="pi pi-file-excel" severity="secondary" (onClick)="exportExcelNeraca()" />
+                        </ng-template>
+                    </p-toolbar>
 
                     <p-table
-                        #neracaTable
+                        #neracadt
                         [value]="masterreknrcList"
+                        [(selection)]="selectedMasterreknrcs"
                         [loading]="loadingNeraca"
                         [paginator]="true"
                         [rows]="10"
                         [rowsPerPageOptions]="[5,10,20]"
                         [globalFilterFields]="['kdrek','nmrek','type']"
-                        [sortField]="'kdrek'"
+                        [sortField]="'nmrek'"
                         [sortOrder]="1"
+                        selectionMode="multiple"
                         responsiveLayout="scroll"
                         class="p-datatable-gridlines p-datatable-sm"
                     >
+                        <!--  Search -->
+                        <ng-template pTemplate="caption">
+                            <div class="flex items-center justify-between">
+                                <h5 class="m-0">Neraca</h5>
+                                <p-iconfield>
+                                    <p-inputicon class="pi pi-search" />
+                                    <input pInputText type="text" placeholder="Search" (input)="onGlobalFilter(neracadt, $event)" />
+                                </p-iconfield>
+                            </div>
+                        </ng-template>
+                        <!-- End Search -->
+
                         <ng-template pTemplate="header">
                             <tr>
+                                <th style="width: 3rem">
+                                    <p-tableHeaderCheckbox />
+                                </th>
                                 <th pSortableColumn="kdrek">Kode Rek <p-sortIcon field="kdrek"></p-sortIcon></th>
                                 <th pSortableColumn="nmrek">Uraian <p-sortIcon field="nmrek"></p-sortIcon></th>
                                 <th pSortableColumn="type">Type <p-sortIcon field="type"></p-sortIcon></th>
@@ -106,6 +133,9 @@
                         </ng-template>
                         <ng-template pTemplate="body" let-item>
                             <tr>
+                                <td style="width: 3rem">
+                                    <p-tableCheckbox [value]="item" />
+                                </td>
                                 <td>{{ item.kdrek }}</td>
                                 <td>{{ item.nmrek }}</td>
                                 <td>{{ item.type }}</td>

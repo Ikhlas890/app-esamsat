@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Masterpegawai, MasterpegawaiService } from '@/services/masterpegawai.service';
 import { Masterupt, MasteruptService } from '@/services/masterupt.service';
 import { Masterktp, MasterktpService } from '@/services/masterktp.service';
@@ -9,7 +9,7 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { TableModule } from 'primeng/table';
+import { TableModule, Table } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -17,6 +17,9 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { AutoCompleteModule } from 'primeng/autocomplete';
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
+import { ToolbarModule } from 'primeng/toolbar';
 
 @Component({
   selector: 'app-daftar-pegawai',
@@ -35,7 +38,8 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
     RadioButtonModule,
     ToastModule,
     ConfirmDialogModule,
-    AutoCompleteModule
+    AutoCompleteModule,
+    ToolbarModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './daftar-pegawai.html',
@@ -44,7 +48,13 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
 export class DaftarPegawai implements OnInit {
   // Daftar pegawai (masterpegawai)
   masterpegawaiList: Masterpegawai[] = [];
+
+  // Untuk multi-select di tabel
+  selectedMasterpegawais: Masterpegawai[] = [];
+
+  // untuk satu record aktif (object tunggal, di form/dialog).
   selectedMasterpegawai: Masterpegawai = this.getEmptyMasterpegawai();
+
   masterpegawaiDialog = false;
   masterpegawaiEdit = false;
 
@@ -61,6 +71,30 @@ export class DaftarPegawai implements OnInit {
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) { }
+
+  // Export data (Excel)
+  @ViewChild('dt') dt!: Table;
+
+  onGlobalFilter(table: Table, event: Event) {
+    table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
+  }
+
+  exportExcel() {
+    // pilih data yg difilter, kalau tidak ada ambil semua
+    const dataToExport = this.dt?.filteredValue || this.masterpegawaiList;
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = { Sheets: { data: worksheet }, SheetNames: ['data'] };
+
+    const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    this.saveAsExcelFile(excelBuffer, 'daftar_pegawai');
+  }
+
+  private saveAsExcelFile(buffer: any, fileName: string): void {
+    const data: Blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+    FileSaver.saveAs(data, `${fileName}.xlsx`);
+  }
+  // End export data (Excel)
 
   ngOnInit(): void {
     this.loadDaftar();
@@ -203,6 +237,36 @@ export class DaftarPegawai implements OnInit {
         }
       });
     }
+  }
+
+  deleteSelectedDaftar(): void {
+    if (!this.selectedMasterpegawais || this.selectedMasterpegawais.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Peringatan', detail: 'Pilih data yang ingin dihapus' });
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `Yakin ingin menghapus ${this.selectedMasterpegawais.length} data ini?`,
+      header: 'Konfirmasi Hapus',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        const ids = this.selectedMasterpegawais.map(u => u.idpegawai);
+        // panggil API delete untuk tiap id
+        ids.forEach(id => {
+          this.masterpegawaiService.delete(id).subscribe({
+            next: () => {
+              this.masterpegawaiList = this.masterpegawaiList.filter(u => u.idpegawai !== id);
+            },
+            error: () => {
+              this.messageService.add({ severity: 'error', summary: 'Gagal', detail: `Gagal hapus data ID ${id}` });
+            }
+          });
+        });
+
+        this.selectedMasterpegawais = []; // kosongkan selection
+        this.messageService.add({ severity: 'success', summary: 'Berhasil', detail: 'Data terhapus' });
+      }
+    });
   }
 
   confirmDeleteDaftar(item: Masterpegawai): void {
